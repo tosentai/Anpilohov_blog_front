@@ -30,15 +30,21 @@
               <th>Заголовок</th>
               <th>Дата публікації</th>
               <th>Статус</th>
+              <th>Дії</th>
             </tr>
             </thead>
             <tbody>
-            <tr v-for="post in posts" :key="post.id" :class="{ 'unpublished-row': !post.is_published }">
+            <tr
+                v-for="post in posts"
+                :key="post.id"
+                :class="{ 'unpublished-row': !post.is_published, 'clickable-row': true }"
+                @click="navigateToPost(post)"
+            >
               <td data-label="#">{{ post.id }}</td>
               <td data-label="Автор">{{ post.user.name }}</td>
               <td data-label="Категорія">{{ post.category.title }}</td>
-              <td data-label="Заголовок" class="post-title-link">
-                <NuxtLink :to="'/admin/blog/posts/' + post.id + '/edit'">{{ post.title }}</NuxtLink>
+              <td data-label="Заголовок" class="post-title-cell">
+                <span class="post-title">{{ post.title }}</span>
               </td>
               <td data-label="Дата публікації">
                 {{ post.published_at ? new Date(post.published_at).toLocaleDateString('uk-UA', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Не опубліковано' }}
@@ -47,6 +53,15 @@
                 <span :class="{'status-published': post.is_published, 'status-unpublished': !post.is_published}">
                   {{ post.is_published ? 'Опубліковано' : 'Чернетка' }}
                 </span>
+              </td>
+              <td data-label="Дії" class="actions-cell" @click.stop>
+                <button
+                    @click="editPost(post.id)"
+                    class="edit-button"
+                    title="Редагувати пост"
+                >
+                  Редагувати
+                </button>
               </td>
             </tr>
             </tbody>
@@ -111,6 +126,26 @@ const getPosts = async () => {
     console.error("Error fetching posts:", error);
   } finally {
     loading.value = false;
+  }
+};
+
+const navigateToPost = async (post: Post) => {
+  try {
+    console.log('Navigating to:', `/blog/${post.slug}?source=custom`);
+    await navigateTo(`/blog/${post.slug}?source=custom`);
+  } catch (error) {
+    console.error('Navigation error:', error);
+    window.location.href = `/blog/${post.slug}?source=custom`;
+  }
+};
+
+const editPost = async (postId: number) => {
+  try {
+    console.log('Navigating to edit:', `/admin/blog/posts/${postId}/edit`);
+    await navigateTo(`/admin/blog/posts/${postId}/edit`);
+  } catch (error) {
+    console.error('Edit navigation error:', error);
+    window.location.href = `/admin/blog/posts/${postId}/edit`;
   }
 };
 
@@ -263,38 +298,104 @@ h1 {
   border-bottom: none;
 }
 
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.clickable-row:hover {
+  background-color: #f0f8ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+}
+
 .unpublished-row {
   background-color: #fff9e6;
   color: #6a6a6a;
 }
 
-.post-title-link a {
-  color: #3498db;
-  text-decoration: none;
-  font-weight: 600;
+.unpublished-row:hover {
+  background-color: #fff3d9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
+}
+
+.post-title-cell {
+  position: relative;
+}
+
+.post-title {
+  color: #444;
+  font-weight: 500;
+  cursor: pointer;
   transition: color 0.3s ease;
 }
 
-.post-title-link a:hover {
-  color: #2980b9;
-  text-decoration: underline;
+.post-title:hover {
+  color: #333;
+}
+
+.unpublished-row .post-title {
+  color: #6a6a6a;
+}
+
+.unpublished-row .post-title:hover {
+  color: #5a5a5a;
 }
 
 .status-published {
-  background-color: #e6ffe6;
-  color: #28a745;
-  padding: 5px 10px;
-  border-radius: 5px;
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 0.8em;
-  font-weight: bold;
+  font-weight: 600;
+  white-space: nowrap;
+  display: inline-block;
+  text-align: center;
+  min-width: 80px;
 }
 
 .status-unpublished {
-  background-color: #ffebe6;
-  color: #dc3545;
-  padding: 5px 10px;
-  border-radius: 5px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 0.8em;
-  font-weight: bold;
+  font-weight: 600;
+  white-space: nowrap;
+  display: inline-block;
+  text-align: center;
+  min-width: 80px;
+}
+
+.actions-cell {
+  text-align: center;
+}
+
+.edit-button {
+  padding: 6px 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.edit-button:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.edit-button:active {
+  background-color: #1e7e34;
+  transform: translateY(0);
 }
 </style>

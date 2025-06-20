@@ -66,7 +66,6 @@
 import { ref, h } from 'vue';
 import { getPaginationRowModel } from '@tanstack/vue-table';
 import type { TableColumn } from '@nuxt/ui';
-import { NuxtLink } from '#components';
 
 const table = ref();
 
@@ -77,6 +76,7 @@ type Post = {
   title: string;
   date: string;
   is_published: boolean;
+  slug: string;
 };
 
 const posts = ref<Post[]>([]);
@@ -84,7 +84,17 @@ const config = useRuntimeConfig();
 
 const getRowClass = (row: any) => {
   const isPublished = row.original.is_published;
-  return isPublished ? 'table-row published-row' : 'table-row unpublished-row';
+  return isPublished ? 'table-row published-row clickable-row' : 'table-row unpublished-row clickable-row';
+};
+
+const handleRowClick = async (post: Post) => {
+  try {
+    console.log('Navigating to:', `/blog/${post.slug}?source=nuxt-ui`);
+    await navigateTo(`/blog/${post.slug}?source=nuxt-ui`);
+  } catch (error) {
+    console.error('Navigation error:', error);
+    window.location.href = `/blog/${post.slug}?source=nuxt-ui`;
+  }
 };
 
 const { data, pending, error, refresh } = await useAsyncData(
@@ -102,7 +112,8 @@ const { data, pending, error, refresh } = await useAsyncData(
           category: post.category?.title || '',
           title: post.title,
           date: post.published_at,
-          is_published: post.is_published
+          is_published: post.is_published,
+          slug: post.slug
         })) as Post[];
 
         allPosts = allPosts.concat(pagePosts);
@@ -122,14 +133,44 @@ const columns: TableColumn<Post>[] = [
   {
     accessorKey: 'id',
     header: '#',
-    cell: ({ row }) => `#${row.getValue('id')}`
+    cell: ({ row }) => h('div', {
+      onClick: () => handleRowClick(row.original),
+      class: 'clickable-cell'
+    }, `#${row.getValue('id')}`)
+  },
+  {
+    accessorKey: 'name',
+    header: 'Автор',
+    cell: ({ row }) => h('div', {
+      onClick: () => handleRowClick(row.original),
+      class: 'clickable-cell'
+    }, row.getValue('name'))
+  },
+  {
+    accessorKey: 'category',
+    header: 'Категорія',
+    cell: ({ row }) => h('div', {
+      onClick: () => handleRowClick(row.original),
+      class: 'clickable-cell'
+    }, row.getValue('category'))
+  },
+  {
+    accessorKey: 'title',
+    header: 'Заголовок',
+    cell: ({ row }) => {
+      const postTitle = row.getValue('title');
+      return h('div', {
+        class: 'post-title-main',
+        onClick: () => handleRowClick(row.original)
+      }, postTitle);
+    }
   },
   {
     accessorKey: 'date',
     header: 'Дата публікації',
     cell: ({ row }) => {
       const dateValue = row.getValue('date');
-      return dateValue ? new Date(dateValue).toLocaleString('uk-UA', {
+      const formattedDate = dateValue ? new Date(dateValue).toLocaleString('uk-UA', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
@@ -137,26 +178,10 @@ const columns: TableColumn<Post>[] = [
         minute: '2-digit',
         hour12: false
       }) : 'Немає';
-    }
-  },
-  {
-    accessorKey: 'name',
-    header: 'Автор'
-  },
-  {
-    accessorKey: 'category',
-    header: 'Категорія'
-  },
-  {
-    accessorKey: 'title',
-    header: 'Заголовок',
-    cell: ({ row }) => {
-      const postId = row.getValue('id');
-      const postTitle = row.getValue('title');
-      return h(NuxtLink, {
-        to: `/admin/blog/posts/${postId}/edit`,
-        class: 'post-title-link'
-      }, () => postTitle);
+      return h('div', {
+        onClick: () => handleRowClick(row.original),
+        class: 'clickable-cell'
+      }, formattedDate);
     }
   },
   {
@@ -165,8 +190,33 @@ const columns: TableColumn<Post>[] = [
     cell: ({ row }) => {
       const isPublished = row.getValue('is_published');
       return h('div', {
+        onClick: () => handleRowClick(row.original),
+        class: 'clickable-cell',
         innerHTML: `<span class="status-badge ${isPublished ? 'status-published' : 'status-unpublished'}">${isPublished ? 'Опубліковано' : 'Чернетка'}</span>`
       });
+    }
+  },
+  {
+    accessorKey: 'actions',
+    header: 'Дії',
+    cell: ({ row }) => {
+      const postId = row.getValue('id');
+      return h('div', {
+        class: 'actions-cell'
+      }, [
+        h('button', {
+          class: 'edit-button',
+          onClick: async (e: Event) => {
+            e.stopPropagation();
+            try {
+              await navigateTo(`/admin/blog/posts/${postId}/edit`);
+            } catch (error) {
+              console.error('Edit navigation error:', error);
+              window.location.href = `/admin/blog/posts/${postId}/edit`;
+            }
+          }
+        }, 'Редагувати')
+      ]);
     }
   }
 ];
@@ -258,7 +308,7 @@ const pagination = ref({
   margin-bottom: 30px;
 }
 
-.card-header h1  {
+.card-header h1 {
   font-family: 'Montserrat', sans-serif;
   color: #2c3e50;
   text-align: center;
@@ -327,15 +377,64 @@ const pagination = ref({
 
 .styled-table :deep(tbody tr) {
   border-bottom: 1px solid #f0f0f0;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .styled-table :deep(tbody tr:last-child) {
   border-bottom: none;
 }
 
-.styled-table :deep(tbody tr:hover) {
-  background-color: #f9fafc;
+.clickable-cell {
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.post-title-main {
+  cursor: pointer;
+  color: #444;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.post-title-main:hover {
+  color: #333;
+}
+
+.actions-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.edit-button {
+  padding: 6px 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.edit-button:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.edit-button:active {
+  background-color: #1e7e34;
+  transform: translateY(0);
 }
 
 .styled-table :deep(tbody tr.unpublished-row) {
@@ -343,8 +442,16 @@ const pagination = ref({
   color: #6a6a6a;
 }
 
+.styled-table :deep(tbody tr:hover) {
+  background-color: #f0f8ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+}
+
 .styled-table :deep(tbody tr.unpublished-row:hover) {
   background-color: #fff3d9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
 }
 
 .styled-table :deep(td) {
@@ -355,23 +462,11 @@ const pagination = ref({
   vertical-align: middle;
 }
 
-.post-title-link {
-  color: #3498db;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-.post-title-link:hover {
-  color: #2980b9;
-  text-decoration: underline;
-}
-
-.styled-table :deep(tbody tr.unpublished-row) .post-title-link {
+.styled-table :deep(tbody tr.unpublished-row) .post-title-main {
   color: #6a6a6a;
 }
 
-.styled-table :deep(tbody tr.unpublished-row) .post-title-link:hover {
+.styled-table :deep(tbody tr.unpublished-row) .post-title-main:hover {
   color: #5a5a5a;
 }
 
