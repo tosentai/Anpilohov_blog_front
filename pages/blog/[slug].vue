@@ -46,14 +46,6 @@
           </template>
 
           <div class="post-content" v-html="post.content_html"></div>
-
-          <template #footer>
-            <div class="post-footer">
-              <UButton icon="i-heroicons-arrow-left" :to="backUrl" color="gray" variant="ghost" size="lg">
-                {{ backButtonText }}
-              </UButton>
-            </div>
-          </template>
         </UCard>
       </template>
     </div>
