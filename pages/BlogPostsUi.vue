@@ -1,29 +1,35 @@
 <template>
-  <div class="main-container">
-    <NuxtLink to="/" class="home-button">
+  <div class="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-100 relative">
+    <NuxtLink
+        to="/"
+        class="absolute top-8 left-8 inline-flex items-center px-5 py-2.5 bg-gray-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out hover:bg-gray-700 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75"
+    >
       На головну
     </NuxtLink>
 
-    <div class="content-wrapper">
-      <div class="card-header">
-        <h1>Список постів (NuxtUI Таблиця)</h1>
-        <div class="table-actions">
-          <NuxtLink to="/admin/blog/posts/create" class="styled-button">
+    <div class="w-full max-w-screen-xl bg-white rounded-xl shadow-lg p-10">
+      <div class="text-center mb-10">
+        <h1 class="font-['Montserrat'] text-5xl font-extrabold text-gray-800 mb-10 drop-shadow-md">Список постів (NuxtUI Таблиця)</h1>
+        <div class="flex justify-end mb-6">
+          <NuxtLink
+              to="/admin/blog/posts/create"
+              class="inline-flex items-center px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out hover:bg-blue-600 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
+          >
             Додати новий пост
           </NuxtLink>
         </div>
       </div>
 
-      <div class="table-card">
-        <div class="table-wrapper">
+      <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto min-h-52 flex items-center justify-center p-5">
           <template v-if="pending">
-            <div class="loading-state">Завантаження постів...</div>
+            <div class="text-lg text-gray-600 font-medium">Завантаження постів...</div>
           </template>
           <template v-else-if="error">
-            <div class="error-state">Помилка завантаження постів: {{ error.message }}</div>
+            <div class="text-lg text-red-600 font-medium">Помилка завантаження постів: {{ error.message }}</div>
           </template>
           <template v-else-if="posts.length === 0">
-            <div class="empty-state">Постів поки що немає.</div>
+            <div class="text-lg text-gray-600 font-medium">Постів поки що немає.</div>
           </template>
           <template v-else>
             <UTable
@@ -32,30 +38,40 @@
                 :data="posts"
                 :columns="columns"
                 :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
-                class="styled-table"
-                :thead-class="'table-thead'"
+                class="w-full table-fixed"
+                :thead-class="'bg-gray-50 border-b-2 border-gray-200'"
                 :tbody-tr-class="(row) => getRowClass(row)"
-                :tbody-td-class="'table-cell'"
-                :th-class="'table-th'"
+                :tbody-td-class="'py-4 px-5 text-gray-700 text-sm'"
+                :th-class="'py-4 px-5 text-left text-sm font-bold text-gray-600 uppercase tracking-wider'"
             />
           </template>
         </div>
 
-        <div class="footer-pagination" v-if="!pending && !error && posts.length > 0">
-          <div class="pagination-control">
-            <div class="pagination-label">
-              Показано {{ ((pagination.pageIndex) * pagination.pageSize) + 1 }} -
-              {{ Math.min((pagination.pageIndex + 1) * pagination.pageSize, posts.length) }}
-              з {{ posts.length }} результатів
-            </div>
-            <UPagination
-                :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
-                :items-per-page="table?.tableApi?.getState().pagination.pageSize"
-                :total="table?.tableApi?.getFilteredRowModel().rows.length"
-                @update:page="p => table?.tableApi?.setPageIndex(p - 1)"
-                class="custom-pagination"
-            />
+        <div v-if="!pending && !error && posts.length > 0" class="flex items-center justify-between px-5 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex-wrap gap-x-5">
+          <div class="text-sm text-gray-600 whitespace-nowrap">
+            Показано {{ ((pagination.pageIndex) * pagination.pageSize) + 1 }} -
+            {{ Math.min((pagination.pageIndex + 1) * pagination.pageSize, posts.length) }}
+            з {{ posts.length }} результатів
           </div>
+          <UPagination
+              :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
+              :items-per-page="table?.tableApi?.getState().pagination.pageSize"
+              :total="table?.tableApi?.getFilteredRowModel().rows.length"
+              @update:page="p => table?.tableApi?.setPageIndex(p - 1)"
+              class="flex gap-1"
+              :ui="{
+              wrapper: 'flex items-center gap-1',
+              base: 'flex-1 min-w-0',
+              item: {
+                base: 'w-10 h-10 flex items-center justify-center rounded-md text-sm font-medium transition-all duration-150',
+                active: 'bg-blue-600 text-white shadow-md', // Синій для активної сторінки
+                inactive: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100',
+                size: 'text-sm'
+              },
+              prev: { base: 'w-10 h-10', icon: 'i-heroicons-chevron-left' },
+              next: { base: 'w-10 h-10', icon: 'i-heroicons-chevron-right' }
+            }"
+          />
         </div>
       </div>
     </div>
@@ -84,7 +100,7 @@ const config = useRuntimeConfig();
 
 const getRowClass = (row: any) => {
   const isPublished = row.original.is_published;
-  return isPublished ? 'table-row published-row clickable-row' : 'table-row unpublished-row clickable-row';
+  return isPublished ? 'bg-white hover:bg-blue-50 hover:shadow-sm transform transition-all duration-200 ease-in-out cursor-pointer' : 'bg-amber-50 text-gray-600 hover:bg-amber-100 hover:shadow-sm transform transition-all duration-200 ease-in-out cursor-pointer';
 };
 
 const handleRowClick = async (post: Post) => {
@@ -135,7 +151,7 @@ const columns: TableColumn<Post>[] = [
     header: '#',
     cell: ({ row }) => h('div', {
       onClick: () => handleRowClick(row.original),
-      class: 'clickable-cell'
+      class: 'cursor-pointer w-full h-full flex items-center'
     }, `#${row.getValue('id')}`)
   },
   {
@@ -143,7 +159,7 @@ const columns: TableColumn<Post>[] = [
     header: 'Автор',
     cell: ({ row }) => h('div', {
       onClick: () => handleRowClick(row.original),
-      class: 'clickable-cell'
+      class: 'cursor-pointer w-full h-full flex items-center'
     }, row.getValue('name'))
   },
   {
@@ -151,7 +167,7 @@ const columns: TableColumn<Post>[] = [
     header: 'Категорія',
     cell: ({ row }) => h('div', {
       onClick: () => handleRowClick(row.original),
-      class: 'clickable-cell'
+      class: 'cursor-pointer w-full h-full flex items-center'
     }, row.getValue('category'))
   },
   {
@@ -160,7 +176,7 @@ const columns: TableColumn<Post>[] = [
     cell: ({ row }) => {
       const postTitle = row.getValue('title');
       return h('div', {
-        class: 'post-title-main',
+        class: 'cursor-pointer text-gray-800 font-medium hover:text-gray-900 transition-colors duration-300 w-full h-full flex items-center break-words',
         onClick: () => handleRowClick(row.original)
       }, postTitle);
     }
@@ -180,7 +196,7 @@ const columns: TableColumn<Post>[] = [
       }) : 'Немає';
       return h('div', {
         onClick: () => handleRowClick(row.original),
-        class: 'clickable-cell'
+        class: 'cursor-pointer w-full h-full flex items-center'
       }, formattedDate);
     }
   },
@@ -191,8 +207,8 @@ const columns: TableColumn<Post>[] = [
       const isPublished = row.getValue('is_published');
       return h('div', {
         onClick: () => handleRowClick(row.original),
-        class: 'clickable-cell',
-        innerHTML: `<span class="status-badge ${isPublished ? 'status-published' : 'status-unpublished'}">${isPublished ? 'Опубліковано' : 'Чернетка'}</span>`
+        class: 'cursor-pointer w-full h-full flex items-center',
+        innerHTML: `<span class="inline-block px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap text-center min-w-[80px] ${isPublished ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}">${isPublished ? 'Опубліковано' : 'Чернетка'}</span>`
       });
     }
   },
@@ -202,10 +218,11 @@ const columns: TableColumn<Post>[] = [
     cell: ({ row }) => {
       const postId = row.getValue('id');
       return h('div', {
-        class: 'actions-cell'
+        class: 'flex justify-center items-center'
       }, [
         h('button', {
-          class: 'edit-button',
+          // Змінено з bg-green-500 на bg-blue-500
+          class: 'px-3 py-1.5 bg-blue-500 text-white border border-blue-500 rounded-md text-sm font-medium cursor-pointer transition-all duration-300 ease-in-out hover:bg-blue-600 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75',
           onClick: async (e: Event) => {
             e.stopPropagation();
             try {
@@ -221,6 +238,7 @@ const columns: TableColumn<Post>[] = [
   }
 ];
 
+
 const pagination = ref({
   pageIndex: 0,
   pageSize: 10
@@ -228,352 +246,16 @@ const pagination = ref({
 </script>
 
 <style scoped>
-.main-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #f0f2f5;
-  padding: 30px;
-  box-sizing: border-box;
-  position: relative;
-}
 
-.home-button {
-  position: absolute;
-  top: 30px;
-  left: 30px;
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #6c757d;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-}
-
-.home-button:hover {
-  background-color: #5a6268;
-  transform: translateY(-2px);
-}
-
-.home-button:active {
-  background-color: #495057;
-  transform: translateY(0);
-}
-
-.table-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 25px;
-}
-
-.styled-button {
-  display: inline-block;
-  padding: 12px 25px;
-  background-color: #3498db;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.styled-button:hover {
-  background-color: #2980b9;
-  transform: translateY(-3px);
-}
-
-.styled-button:active {
-  background-color: #1f618d;
-  transform: translateY(0);
-}
-
-.content-wrapper {
-  max-width: 1200px;
-  width: 100%;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-}
-
-.card-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.card-header h1 {
-  font-family: 'Montserrat', sans-serif;
-  color: #2c3e50;
-  text-align: center;
-  margin-bottom: 40px;
-  font-size: 3em;
-  font-weight: 700;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.header-subtitle {
-  font-family: 'Open Sans', sans-serif;
-  font-size: 1.1em;
-  color: #555;
-  line-height: 1.6;
-  margin-top: 0;
-}
-
-.table-card {
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+.table-fixed :deep(th),
+.table-fixed :deep(td) {
   overflow: hidden;
-  border: 1px solid #e0e0e0;
+  text-overflow: ellipsis;
+  white-space: normal;
 }
 
-.table-wrapper {
-  overflow-x: auto;
-  padding: 0 20px;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.loading-state, .error-state, .empty-state {
-  font-family: 'Open Sans', sans-serif;
-  font-size: 1.2em;
-  color: #6a6a6a;
-  text-align: center;
-  padding: 20px;
-}
-
-.error-state {
-  color: #dc3545;
-}
-
-.styled-table {
-  width: 100%;
-}
-
-.styled-table :deep(thead) {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-.styled-table :deep(th) {
-  font-family: 'Open Sans', sans-serif;
-  text-align: left;
-  padding: 15px 20px;
-  font-size: 0.95em;
-  font-weight: 700;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.styled-table :deep(tbody tr) {
-  border-bottom: 1px solid #f0f0f0;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.styled-table :deep(tbody tr:last-child) {
-  border-bottom: none;
-}
-
-.clickable-cell {
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.post-title-main {
-  cursor: pointer;
-  color: #444;
-  font-weight: 500;
-  transition: color 0.3s ease;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.post-title-main:hover {
-  color: #333;
-}
-
-.actions-cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.edit-button {
-  padding: 6px 12px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.8em;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.edit-button:hover {
-  background-color: #218838;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-}
-
-.edit-button:active {
-  background-color: #1e7e34;
-  transform: translateY(0);
-}
-
-.styled-table :deep(tbody tr.unpublished-row) {
-  background-color: #fff9e6;
-  color: #6a6a6a;
-}
-
-.styled-table :deep(tbody tr:hover) {
-  background-color: #f0f8ff;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
-}
-
-.styled-table :deep(tbody tr.unpublished-row:hover) {
-  background-color: #fff3d9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
-}
-
-.styled-table :deep(td) {
-  font-family: 'Open Sans', sans-serif;
-  padding: 15px 20px;
-  font-size: 0.9em;
-  color: #444;
-  vertical-align: middle;
-}
-
-.styled-table :deep(tbody tr.unpublished-row) .post-title-main {
-  color: #6a6a6a;
-}
-
-.styled-table :deep(tbody tr.unpublished-row) .post-title-main:hover {
-  color: #5a5a5a;
-}
-
-:deep(.status-badge) {
-  padding: 6px 12px !important;
-  border-radius: 20px !important;
-  font-size: 0.8em !important;
-  font-weight: 600 !important;
-  white-space: nowrap !important;
-  display: inline-block !important;
-  text-align: center !important;
-  min-width: 80px !important;
-}
-
-:deep(.status-published) {
-  background-color: #d4edda !important;
-  color: #155724 !important;
-  border: 1px solid #c3e6cb !important;
-}
-
-:deep(.status-unpublished) {
-  background-color: #f8d7da !important;
-  color: #721c24 !important;
-  border: 1px solid #f5c6cb !important;
-}
-
-.footer-pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-top: 1px solid #e0e0e0;
-  background-color: #f8f9fa;
-  min-height: 65px;
-  flex-wrap: nowrap;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
-.pagination-control {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 20px;
-}
-
-.pagination-label {
-  font-family: 'Open Sans', sans-serif;
-  font-size: 0.9em;
-  color: #6a6a6a;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.custom-pagination :deep(nav) {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.custom-pagination :deep(button) {
-  background-color: white !important;
-  border: 1px solid #dee2e6 !important;
-  padding: 8px 12px !important;
-  border-radius: 6px !important;
-  font-size: 0.875rem !important;
-  color: #495057 !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease-in-out !important;
-  min-width: 40px !important;
-  height: 40px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-weight: 500 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-}
-
-.custom-pagination :deep(button:hover:not(:disabled)) {
-  background-color: #e9ecef !important;
-  border-color: #adb5bd !important;
-  color: #495057 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-}
-
-.custom-pagination :deep(button[aria-current="page"]) {
-  background-color: #007bff !important;
-  border-color: #007bff !important;
-  color: white !important;
-  font-weight: 600 !important;
-  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.25) !important;
-}
-
-.custom-pagination :deep(button:disabled) {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-  background-color: #f8f9fa !important;
-  border-color: #dee2e6 !important;
-  color: #6c757d !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-.custom-pagination :deep(button:focus) {
-  outline: 2px solid #007bff !important;
-  outline-offset: 2px !important;
+.table-fixed :deep(td > .break-words) {
+  white-space: normal;
+  word-break: break-word;
 }
 </style>

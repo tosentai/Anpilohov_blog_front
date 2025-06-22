@@ -10,6 +10,10 @@
         <h2>Список постів з NuxtUI таблицею</h2>
         <p>Пости, що використовують компоненти NuxtUI.</p>
       </NuxtLink>
+      <NuxtLink to="/admin/blog/categories" class="link-card">
+        <h2>Список категорій</h2>
+        <p>Категорії, що використовують компоненти NuxtUI.</p>
+      </NuxtLink>
     </div>
   </div>
 </template>
