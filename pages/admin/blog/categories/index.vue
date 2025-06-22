@@ -10,36 +10,39 @@
     <div class="w-full max-w-screen-xl bg-white rounded-xl shadow-lg p-10">
       <div class="text-center mb-10">
         <h1 class="font-['Montserrat'] text-5xl font-extrabold text-gray-800 mb-10 drop-shadow-md">Список категорій (NuxtUI Таблиця)</h1>
-
-        <!-- Search Bar -->
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-          <div class="relative flex-1 max-w-md">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-            </div>
-            <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Пошук категорій..."
-                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-            <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <button
-                  @click="clearSearch"
-                  class="text-gray-400 hover:text-gray-600 focus:outline-none"
+        <div class="flex justify-between items-center mb-6 gap-4">
+          <!-- Search Input -->
+          <div class="flex-1 max-w-md">
+            <div class="relative">
+              <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Пошук по всім полям..."
+                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                  @input="handleSearch"
               >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-              </button>
+              </div>
+              <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                    @click="clearSearch"
+                    class="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
+          <!-- Add Category Button -->
           <NuxtLink
               to="/admin/blog/categories/create"
-              class="inline-flex items-center px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out hover:bg-blue-600 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
+              class="inline-flex items-center px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out hover:bg-blue-600 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 whitespace-nowrap"
           >
             Додати нову категорію
           </NuxtLink>
@@ -47,7 +50,8 @@
 
         <!-- Search Results Info -->
         <div v-if="searchQuery && !pending" class="text-sm text-gray-600 mb-4 text-left">
-          Знайдено {{ filteredCategories.length }} з {{ categories.length }} категорій за запитом "{{ searchQuery }}"
+          Знайдено {{ filteredCategories.length }} з {{ categories.length }} категорій
+          <span v-if="searchQuery" class="font-medium">для запиту "{{ searchQuery }}"</span>
         </div>
       </div>
 
@@ -59,14 +63,20 @@
           <template v-else-if="error">
             <div class="text-lg text-red-600 font-medium">Помилка завантаження категорій: {{ error.message }}</div>
           </template>
-          <template v-else-if="filteredCategories.length === 0 && searchQuery">
-            <div class="text-lg text-gray-600 font-medium">
-              За запитом "{{ searchQuery }}" нічого не знайдено.
-              <button @click="clearSearch" class="text-blue-500 underline ml-1">Очистити пошук</button>
-            </div>
-          </template>
-          <template v-else-if="categories.length === 0">
+          <template v-else-if="filteredCategories.length === 0 && !searchQuery">
             <div class="text-lg text-gray-600 font-medium">Категорій поки що немає.</div>
+          </template>
+          <template v-else-if="filteredCategories.length === 0 && searchQuery">
+            <div class="text-center">
+              <div class="text-lg text-gray-600 font-medium mb-2">Нічого не знайдено</div>
+              <div class="text-sm text-gray-500">Спробуйте змінити пошуковий запит</div>
+              <button
+                  @click="clearSearch"
+                  class="mt-3 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+              >
+                Очистити пошук
+              </button>
+            </div>
           </template>
           <template v-else>
             <UTable
@@ -89,6 +99,7 @@
             Показано {{ ((pagination.pageIndex) * pagination.pageSize) + 1 }} -
             {{ Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredCategories.length) }}
             з {{ filteredCategories.length }} результатів
+            <span v-if="searchQuery">(відфільтровано з {{ categories.length }})</span>
           </div>
           <UPagination
               :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
@@ -121,7 +132,6 @@ import { getPaginationRowModel } from '@tanstack/vue-table';
 import type { TableColumn } from '@nuxt/ui';
 
 const table = ref();
-const searchQuery = ref('');
 
 type Category = {
   id: string;
@@ -134,6 +144,7 @@ type Category = {
 };
 
 const categories = ref<Category[]>([]);
+const searchQuery = ref('');
 const config = useRuntimeConfig();
 
 // Search functionality
@@ -146,29 +157,41 @@ const filteredCategories = computed(() => {
 
   return categories.value.filter(category => {
     // Search in all fields
-    const searchableFields = [
+    const searchFields = [
       category.id,
       category.title,
       category.slug,
       category.description || '',
       category.parent_id || '',
+      // Format dates for search
       new Date(category.created_at).toLocaleString('uk-UA'),
       new Date(category.updated_at).toLocaleString('uk-UA')
     ];
 
-    return searchableFields.some(field =>
+    return searchFields.some(field =>
         String(field).toLowerCase().includes(query)
     );
   });
 });
 
-const clearSearch = () => {
-  searchQuery.value = '';
+const handleSearch = () => {
+  // Reset pagination when searching
+  pagination.value.pageIndex = 0;
 };
 
-// Reset pagination when search changes
-watch(searchQuery, () => {
+const clearSearch = () => {
+  searchQuery.value = '';
   pagination.value.pageIndex = 0;
+};
+
+// Watch for changes in filtered results to reset pagination
+watch(filteredCategories, () => {
+  if (pagination.value.pageIndex > 0) {
+    const maxPage = Math.ceil(filteredCategories.value.length / pagination.value.pageSize) - 1;
+    if (pagination.value.pageIndex > maxPage) {
+      pagination.value.pageIndex = Math.max(0, maxPage);
+    }
+  }
 });
 
 const getRowClass = (row: any) => {
