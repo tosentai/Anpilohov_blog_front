@@ -64,7 +64,7 @@
               base: 'flex-1 min-w-0',
               item: {
                 base: 'w-10 h-10 flex items-center justify-center rounded-md text-sm font-medium transition-all duration-150',
-                active: 'bg-blue-600 text-white shadow-md', // Синій для активної сторінки
+                active: 'bg-blue-600 text-white shadow-md',
                 inactive: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100',
                 size: 'text-sm'
               },
@@ -110,6 +110,26 @@ const handleRowClick = async (post: Post) => {
   } catch (error) {
     console.error('Navigation error:', error);
     window.location.href = `/blog/${post.slug}?source=nuxt-ui`;
+  }
+};
+
+const handleDeleteClick = async (post: Post) => {
+  const confirmed = confirm(`Ви впевнені, що хочете видалити пост "${post.title}"? Цю дію неможливо скасувати.`);
+
+  if (!confirmed) return;
+
+  try {
+    await $fetch(`${config.public.apiBase}/blog/posts/${post.slug}`, {
+      method: 'DELETE'
+    });
+
+    posts.value = posts.value.filter(p => p.slug !== post.slug);
+
+    alert('Пост успішно видалено!');
+
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert('Помилка при видаленні поста');
   }
 };
 
@@ -216,28 +236,34 @@ const columns: TableColumn<Post>[] = [
     accessorKey: 'actions',
     header: 'Дії',
     cell: ({ row }) => {
-      const postId = row.getValue('id');
+      const postSlug = row.original.slug;
+
       return h('div', {
-        class: 'flex justify-center items-center'
+        class: 'flex justify-center items-center gap-2'
       }, [
         h('button', {
-          // Змінено з bg-green-500 на bg-blue-500
           class: 'px-3 py-1.5 bg-blue-500 text-white border border-blue-500 rounded-md text-sm font-medium cursor-pointer transition-all duration-300 ease-in-out hover:bg-blue-600 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75',
           onClick: async (e: Event) => {
             e.stopPropagation();
             try {
-              await navigateTo(`/admin/blog/posts/${postId}/edit`);
+              await navigateTo(`/admin/blog/posts/${postSlug}/edit`);
             } catch (error) {
               console.error('Edit navigation error:', error);
-              window.location.href = `/admin/blog/posts/${postId}/edit`;
+              window.location.href = `/admin/blog/posts/${postSlug}/edit`;
             }
           }
-        }, 'Редагувати')
+        }, 'Редагувати'),
+        h('button', {
+          class: 'px-3 py-1.5 bg-red-500 text-white border border-red-500 rounded-md text-sm font-medium cursor-pointer transition-all duration-300 ease-in-out hover:bg-red-600 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75',
+          onClick: (e: Event) => {
+            e.stopPropagation();
+            handleDeleteClick(row.original);
+          }
+        }, 'Видалити')
       ]);
     }
   }
 ];
-
 
 const pagination = ref({
   pageIndex: 0,
@@ -246,7 +272,6 @@ const pagination = ref({
 </script>
 
 <style scoped>
-
 .table-fixed :deep(th),
 .table-fixed :deep(td) {
   overflow: hidden;

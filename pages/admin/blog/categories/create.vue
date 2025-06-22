@@ -45,7 +45,6 @@
             </UFormGroup>
 
             <UFormGroup label="Батьківська категорія" name="parent_id" :error="errors.parent_id">
-              <!-- Звичайний HTML select -->
               <select
                   v-model="state.parent_id"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
@@ -70,7 +69,6 @@
                 </span>
               </div>
 
-              <!-- Debug інформація -->
               <div v-if="$config.public.NODE_ENV === 'development'" class="text-xs text-blue-500 mt-1">
                 Debug: Selected value = {{ state.parent_id }}, Options loaded = {{ !isLoadingCategories }}
               </div>
@@ -104,7 +102,6 @@
         </div>
       </div>
 
-      <!-- Loading state -->
       <div v-if="isLoadingCategories" class="text-center mt-4">
         <div class="text-gray-600">Завантаження категорій...</div>
       </div>
@@ -161,15 +158,6 @@ const toast = useToast();
 const config = useRuntimeConfig();
 
 const availableCategories = ref<Category[]>([]);
-
-// Computed для відображення обраної категорії (не потрібен для звичайного select)
-// const selectedCategoryLabel = computed(() => {
-//   if (state.value.parent_id === null) {
-//     return 'Без батьківської категорії';
-//   }
-//   const selected = categoryOptions.value.find(opt => opt.value === state.value.parent_id);
-//   return selected ? selected.label : 'Оберіть батьківську категорію';
-// });
 
 const fetchCategoriesForSelect = async () => {
   isLoadingCategories.value = true;

@@ -12,9 +12,6 @@
 
       <div v-else>
         <div class="table-actions">
-          <NuxtLink to="/admin/blog/posts/create" class="styled-button">
-            Додати новий пост
-          </NuxtLink>
           <div class="posts-count">
             Всього постів: {{ posts.length }}
           </div>

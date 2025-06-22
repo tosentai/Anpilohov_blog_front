@@ -11,7 +11,6 @@
       <div class="text-center mb-10">
         <h1 class="font-['Montserrat'] text-5xl font-extrabold text-gray-800 mb-10 drop-shadow-md">Список категорій (NuxtUI Таблиця)</h1>
         <div class="flex justify-between items-center mb-6 gap-4">
-          <!-- Search Input -->
           <div class="flex-1 max-w-md">
             <div class="relative">
               <input
@@ -39,7 +38,6 @@
             </div>
           </div>
 
-          <!-- Add Category Button -->
           <NuxtLink
               to="/admin/blog/categories/create"
               class="inline-flex items-center px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out hover:bg-blue-600 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 whitespace-nowrap"
@@ -48,7 +46,6 @@
           </NuxtLink>
         </div>
 
-        <!-- Search Results Info -->
         <div v-if="searchQuery && !pending" class="text-sm text-gray-600 mb-4 text-left">
           Знайдено {{ filteredCategories.length }} з {{ categories.length }} категорій
           <span v-if="searchQuery" class="font-medium">для запиту "{{ searchQuery }}"</span>
@@ -147,7 +144,6 @@ const categories = ref<Category[]>([]);
 const searchQuery = ref('');
 const config = useRuntimeConfig();
 
-// Search functionality
 const filteredCategories = computed(() => {
   if (!searchQuery.value.trim()) {
     return categories.value;
@@ -156,14 +152,12 @@ const filteredCategories = computed(() => {
   const query = searchQuery.value.toLowerCase().trim();
 
   return categories.value.filter(category => {
-    // Search in all fields
     const searchFields = [
       category.id,
       category.title,
       category.slug,
       category.description || '',
       category.parent_id || '',
-      // Format dates for search
       new Date(category.created_at).toLocaleString('uk-UA'),
       new Date(category.updated_at).toLocaleString('uk-UA')
     ];
@@ -175,7 +169,6 @@ const filteredCategories = computed(() => {
 });
 
 const handleSearch = () => {
-  // Reset pagination when searching
   pagination.value.pageIndex = 0;
 };
 
@@ -184,7 +177,6 @@ const clearSearch = () => {
   pagination.value.pageIndex = 0;
 };
 
-// Watch for changes in filtered results to reset pagination
 watch(filteredCategories, () => {
   if (pagination.value.pageIndex > 0) {
     const maxPage = Math.ceil(filteredCategories.value.length / pagination.value.pageSize) - 1;
@@ -220,7 +212,6 @@ const deleteCategory = async (id: string, event: Event) => {
       method: 'DELETE'
     });
 
-    // Refresh data after deletion
     await refresh();
   } catch (error) {
     console.error('Помилка видалення категорії:', error);
